@@ -7,6 +7,11 @@ DESCRIPTION
 target (URL, hostname, IP, etc) and return a list of supported SSL/TLS cipher 
 suites.
 
+The resultant cipher suite list includes OpenSSL and IANA (Internet Assigned 
+Numbers Authority) nomenclature. In order to achieve this the script has a
+dependency on the the official TLS Cipher Suites registry (a CSV file) which is 
+maintained by the IANA (Internet Assigned Numbers Authority. Consequently the
+first time you run the script, you'll be prompted to download the file.
 
 USAGE
 -----
@@ -61,7 +66,6 @@ Please wait.....................................................................
 
 Elapsed time: 0:00:54
 ```
-
 
 FILES
 -----
