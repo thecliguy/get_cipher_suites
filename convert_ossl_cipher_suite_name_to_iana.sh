@@ -39,7 +39,6 @@
 #   * openssl - OpenSSL command line binary.
 #   * curl    - cURL is a command-line tool for getting or sending files using 
 #               URL syntax.
-#   * sed     - Parses and transforms text.
 #   * tr      - Translates or deletes characters. Present in GNU Core Utilities 
 #               (coreutils).
 #   * cut     - A command line utility which is used to extract sections from 
