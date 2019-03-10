@@ -162,9 +162,14 @@ timer() {
 IsIanaCsvPresentAndNotEmpty() {
     if [ ! -s "$cIana_Csv_File" ]; then
         echo >&2 "The file '$cIana_Csv_File' does not exist or is empty."
+        echo >&2 ""
+        echo >&2 "This script has a dependency on the official TLS Cipher Suites"
+        echo >&2 "registry CSV maintained by the IANA (Internet Assigned Numbers"
+        echo >&2 "Authority)."
+        echo >&2 ""
         
         if [ "$noninteractive" -eq 1 ]; then
-            echo "To download the file, run the script omitting the -n (noninteractive) parameter."
+            echo "To download the file, run the script omitting the -n (non-interactive) parameter."
             exit 1
         else
             while true; do
