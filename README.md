@@ -69,3 +69,5 @@ FILES
   * `convert_ossl_cipher_suite_name_to_iana.sh` - Converts an OpenSSL formatted 
     cipher suite name to the description recorded in the official TLS Cipher 
 	Suites registry maintained by the IANA (Internet Assigned Numbers Authority).
+
+**NB:** Both scripts must be executable (eg `chmod +x <script>`).
