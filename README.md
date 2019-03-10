@@ -3,7 +3,7 @@ get_cipher_suites
 
 DESCRIPTION
 -----------
-get_cipher_suites is a Bash script the purpose of which is to interrogate a
+`get_cipher_suites.sh` is a Bash script the purpose of which is to interrogate a
 target (URL, hostname, IP, etc) and return a list of supported SSL/TLS cipher 
 suites.
 
@@ -66,8 +66,9 @@ Elapsed time: 0:00:54
 FILES
 -----
   * `get_cipher_suites.sh` - The main script.
-  * `convert_ossl_cipher_suite_name_to_iana.sh` - Converts an OpenSSL formatted 
-    cipher suite name to the description recorded in the official TLS Cipher 
-	Suites registry maintained by the IANA (Internet Assigned Numbers Authority).
+  * `convert_ossl_cipher_suite_name_to_iana.sh` - Called by `get_cipher_suites.sh`
+     to convert an OpenSSL formatted cipher suite name to the description 
+     recorded in the official TLS Cipher Suites registry maintained by the IANA 
+     (Internet Assigned Numbers Authority).
 
 **NB:** Both scripts must be executable (eg `chmod +x <script>`).
