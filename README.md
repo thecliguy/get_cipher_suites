@@ -3,7 +3,7 @@ get_cipher_suites
 
 DESCRIPTION
 -----------
-`get_cipher_suites.sh` is a Bash script the purpose of which is to interrogate a
+`get_cipher_suites.sh` is a Bash script, the purpose of which is to interrogate a
 target (URL, hostname, IP, etc) and return a list of supported SSL/TLS cipher 
 suites.
 
