@@ -9,9 +9,9 @@ suites.
 
 The resultant cipher suite list includes OpenSSL and IANA (Internet Assigned 
 Numbers Authority) nomenclature. In order to achieve this the script has a
-dependency on the the official TLS Cipher Suites registry (a CSV file) which is 
+dependency on the the official TLS Cipher Suites registry which is 
 maintained by the IANA. Consequently the first time you run the script, you'll 
-be prompted to download the CSV file.
+be prompted to download the registry as a CSV file.
 
 USAGE
 -----
