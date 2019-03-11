@@ -76,3 +76,7 @@ FILES
      (Internet Assigned Numbers Authority).
 
 **NB:** Both scripts must be executable (eg `chmod +x <script>`).
+
+MISC
+----
+I wrote a blog post to accompany the first release in March 2019: [List the Supported TLS Cipher Suites on a Host](https://www.thecliguy.co.uk/2019/03/10/list-the-supported-tls-cipher-suites-on-a-host)
