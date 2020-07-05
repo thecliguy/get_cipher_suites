@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Copyright (C) 2019
+# Copyright (C) 2019 - 2020
 # Adam Russell <adam[at]thecliguy[dot]co[dot]uk> 
 # https://www.thecliguy.co.uk
 #
@@ -62,7 +62,12 @@
 #                                                 official TLS Cipher Suites 
 #                                                 registry maintained by the 
 #                                                 Internet Assigned Numbers 
-#                                                 Authority (IANA).
+#                                                 Authority (IANA). This script
+#                                                 is only used if the installed
+#                                                 version of OpenSSL lacks the
+#                                                 'ciphers -stdname' parameter,
+#                                                 which is usually the case
+#                                                 prior to OpenSSL 1.1.1.
 #
 # CAVEATS
 #   Periodically OpenSSL adds support for new versions of the TLS protocol and
@@ -75,7 +80,13 @@
 ################################################################################
 # Development Log:
 #
-# 0.1.0 - 2019-03-10 (AR)
+# 0.2.0 - 2020-07-05 - Adam Russell
+#   * If the installed version of the OpenSSL binary supports the 
+#     'ciphers -stdname' parameter then this is used to perform the OpenSSL
+#     to IANA cipher suite name conversion, else the 
+#     convert_ossl_cipher_suite_name_to_iana.sh script is used.
+#
+# 0.1.0 - 2019-03-10 - Adam Russell
 #   * First release.
 #
 ################################################################################
@@ -88,8 +99,9 @@
 set -euo pipefail
 
 usage() {
+    echo ""
     echo "Usage:"
-    echo "${0##*/} -t <target> [-p <port_number>] [-n] [-v]"
+    echo "  ${0##*/} -t <target> [-p <port_number>] [-n] [-v]"
     echo ""
     echo "Options:"
     echo "  -t    Target"
@@ -105,7 +117,7 @@ about() {
     echo "$cScript_Name"
     echo "Version: $cVersion_Number"
     echo ""
-    echo "Copyright (C) 2019"
+    echo "Copyright (C) 2019 - 2020"
     echo "Adam Russell <adam[at]thecliguy[dot]co[dot]uk>"
     echo "https://www.thecliguy.co.uk"
     echo ""
@@ -226,17 +238,19 @@ function TestCipherSuitesAgainstTarget() {
     #        Mandatory.
     #     3) A space separated string of SSL/TLS versions in OpenSSL format: <SSL|TLS><MAJOR_VER_NO>_<MINOR_VER_NO>.
     #        Mandatory.
-    #     4) Verbose, where 1 = True.
+    #     4) Use Native OpenSSL to IANA Conversion, where 1 = True.
+    #        Mandatory.
+    #     5) Verbose, where 1 = True.
     #        Optional.
     
-    local intNumberOfArgs=4
+    local intNumberArgs=5
     local columnWidths="%-3s | %-8s | %-29s | %-20s\n"
     local verbose=0
     local opensslexitcode=''
     local ctranslatedexitcode=''
-    
-    if [ "$#" -eq 0 ] || [ "$#" -gt "$intNumberOfArgs" ] ; then
-        echo >&2 "${FUNCNAME[0]}: Incorrect number of arguments. Supplied: $#, required: 1 or $intNumberOfArgs."
+        
+    if [ "$#" -eq 0 ] || [ "$#" -gt "$intNumberArgs" ] ; then
+        echo >&2 "${FUNCNAME[0]}: Incorrect number of arguments. Supplied: $#, required: $intNumberArgs."
         exit 1
     fi
     
@@ -248,9 +262,15 @@ function TestCipherSuitesAgainstTarget() {
     read -ra arrTlsVers <<< "$3"
     
     if [ "$4" -eq 1 ]; then
+        local fUseNativeConversion=1
+    else
+        local fUseNativeConversion=0
+    fi
+    
+    if [ "$5" -eq 1 ]; then
         local verbose=1
     fi
-        
+    
     counter=1
     # Loop through each version of the SSL/TLS protocol.
     for v in "${arrTlsVers[@]}"; do
@@ -291,10 +311,18 @@ function TestCipherSuitesAgainstTarget() {
                 # because the appropriate entry is missing from the IANA CSV
                 # file then the conversion script will return a non-zero
                 # exit code.
-                set +e
-                ctranslated=$("$cOpenssl_To_Iana_Description_Script" -o $c -f "$cIana_Csv_File" 2>&1)
+                                
+                if [ "$fUseNativeConversion" -eq 1 ]; then
+                    set +e
+                    ctranslated=$("$cOpenssl_To_Iana_Description_Script" -o $c 2>&1)
+                    set -e
+                else
+                    set +e
+                    ctranslated=$("$cOpenssl_To_Iana_Description_Script" -o $c -f "$cIana_Csv_File" 2>&1)
+                    set -e
+                fi
+                
                 ctranslatedexitcode="$?"
-                set -e
                 
                 if [ "$ctranslatedexitcode" -eq 0 ]; then
                     if [ "$verbose" -eq 1 ]; then
@@ -320,8 +348,6 @@ function TestCipherSuitesAgainstTarget() {
                     printf "                         $tmpoutput\n"
                 fi
             fi
-
-            #####set -e
             
         done
     done
@@ -332,7 +358,7 @@ function TestCipherSuitesAgainstTarget() {
         printf "$tableoutput\n"
     else
         printf "\n\n"
-        printf "Failed to determine any of the cipher suites used by the specified target.\n"
+        printf "Failed to determine any of the cipher suites used by the specified target.\n\n"
     fi
 }
 
@@ -394,7 +420,7 @@ GetSupportedProtocolVersionsByOpenSslBinary() {
 
 main() {    
     local -r cScript_Name='Get Cipher Suites'
-    local -r cVersion_Number=0.1.0  
+    local -r cVersion_Number=0.2.0  
     local -r cOpenssl_To_Iana_Description_Script='./convert_ossl_cipher_suite_name_to_iana.sh'
     local -r cIana_Csv_File='tls-parameters-4.csv'
         
@@ -462,15 +488,36 @@ main() {
     # Check that openssl is present.
     command -v openssl >/dev/null 2>&1 || { echo >&2 "openssl not found."; exit 1; }
 
-    # Check that the OpenSSL name to IANA conversion script is present.
-    if [ ! -s "$cOpenssl_To_Iana_Description_Script" ]; then
-        echo >&2 "${FUNCNAME[0]}: The file '$cOpenssl_To_Iana_Description_Script' does not exist or is empty."
-        exit 1
+    ############################################################################
+    # Check whether openssl supports the 'ciphers -stdname' parameter.
+    
+    # Temporarily disable exit checking to prevent the script from
+    # aborting. This is because if openssl fails to connect to the 
+    # target using the specified cipher suite it will produce a non-zero 
+    # exit code.
+    set +e
+    tmpoutput=$(openssl ciphers -stdname < /dev/null 2>&1 >/dev/null)
+    opensslexitcode="$?"
+    set -e
+    
+    if [ "$opensslexitcode" -eq 0 ]; then
+        fUseNativeOpensslToIanaConversion=1
+    else
+        fUseNativeOpensslToIanaConversion=0
     fi
+    ############################################################################
     
-    # Check that the IANA CSV file is present and not empty.
-    IsIanaCsvPresentAndNotEmpty
-    
+    if [ "$fUseNativeOpensslToIanaConversion" -eq 0 ]; then
+        # Check that the OpenSSL name to IANA conversion script is present.
+        if [ ! -s "$cOpenssl_To_Iana_Description_Script" ]; then
+            echo >&2 "${FUNCNAME[0]}: The file '$cOpenssl_To_Iana_Description_Script' does not exist or is empty."
+            exit 1
+        fi
+        
+        # Check that the IANA CSV file is present and not empty.
+        IsIanaCsvPresentAndNotEmpty
+    fi
+        
     # Start the timer here because we if the script is running interactively we
     # don't want to incorporate the time it took to respond to prompts.
     starttime="$(timer)"
@@ -493,7 +540,7 @@ main() {
     
     # How to pass an array to a function as an actual parameter rather than a 
     # global variable: https://unix.stackexchange.com/questions/183630
-    TestCipherSuitesAgainstTarget "$target" "$portnumber" "$(echo ${SupportedProtocolVersions[@]})" "$verbose"
+    TestCipherSuitesAgainstTarget "$target" "$portnumber" "$(echo ${SupportedProtocolVersions[@]})" "$fUseNativeOpensslToIanaConversion" "$verbose" 
     
     printf 'Elapsed time: %s\n' "$(timer $starttime)"
 }
