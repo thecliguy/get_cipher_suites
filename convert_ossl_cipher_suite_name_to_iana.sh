@@ -50,6 +50,11 @@
 ################################################################################
 # Development Log:
 #
+# 0.2.1 - 2020-07-05 - Adam Russell
+#
+#   * Improved the handling of multiple rows being returned in the cipher 
+#     information output.
+#
 # 0.2.0 - 2020-07-05 - Adam Russell
 #
 #   * Removed the nonexistent parameter '-v' from the examples present in the 
@@ -84,7 +89,7 @@
 #                   0x13,0x01 - TLS_AES_128_GCM_SHA256  TLSv1.3 Kx=any      Au=any  Enc=AESGCM(128) Mac=AEAD
 #                   0xC0,0x14 - ECDHE-RSA-AES256-SHA    TLSv1 Kx=ECDH     Au=RSA  Enc=AES(256)  Mac=SHA1
 #
-#     To workaround this, ConvertOpenSslToIana has been updated to call the
+#     To workaround this, ConvertOpenSslToIanaWithRegistryCsv has been updated to call the
 #     command as follows: openssl ciphers -V | grep " <cipher suite name> "
 #     
 #     Eg: $ openssl version | tr '[:lower:]' '[:upper:]'
@@ -153,7 +158,7 @@ DownloadTlsCipherSuites() {
     curl -o "$savedfilename" "$cIana_Url$cIana_File" -s --fail --show-error
 }
 
-ConvertOpenSslToIana() {
+ConvertOpenSslToIanaWithRegistryCsv() {
     # Parameters:
     #   1) OpenSSL Cipher Suite Name. 
     #      Mandatory.
@@ -189,7 +194,9 @@ ConvertOpenSslToIana() {
     cipherSuiteDescription=$(openssl ciphers -V | grep " $1 " 2>&1)
     
     # The output should only ever return one row.
-    if [ $(echo "$cipherSuiteDescription" | wc -l) -eq 1 ]; then
+    if [ $(echo "$cipherSuiteDescription" | wc -l) -gt 1 ]; then
+        echo >&2 "${FUNCNAME[0]}: Multiple rows returned in the cipher information output."; exit 1;
+    else        
         echo "$cipherSuiteDescription" | tr -d '[:space:]' | cut -d '-' -f1 | while read CipherSuiteHexCode; do
             grep "$CipherSuiteHexCode" "$2" | cut -d ',' -f3
         done
@@ -318,6 +325,9 @@ main() {
             ;;
         convert)
             if [ "$file" == '' ]; then
+                # Check that wc is present.
+                command -v wc >/dev/null 2>&1 || { echo >&2 "wc not found."; exit 1; }
+                
                 # Check whether openssl supports the 'ciphers -stdname' parameter.
                 
                 # Temporarily disable exit checking to prevent the script from
@@ -328,18 +338,22 @@ main() {
                 cipherInformationOutput=$(openssl ciphers -stdname 2>&1)
                 opensslexitcode="$?"            
                 set -e
-                
+                                
                 if [ "$opensslexitcode" -eq 0 ]; then
-                    ####echo "AAA: Native conversion."
                     returnVal=$(echo "$cipherInformationOutput" | grep " $opensslciphersuite " | cut -d '-' -f1)
+                                        
+                    # The output should only ever return one row.
+                    if [ $(echo "$returnVal" | wc -l) -gt 1 ]; then
+                        echo >&2 "${FUNCNAME[0]}: Multiple rows returned in the cipher information output."; exit 1;
+                    fi
+                                        
                     echo "$returnVal"
                 else
                     >&2 echo "The installed OpenSSL binary does not facilitate native conversion. You must supply the '-f' parameter."
                     exit 1
                 fi
             else
-                ####echo "BBB: CSV file conversion."
-                ConvertOpenSslToIana "$opensslciphersuite" "$file"
+                ConvertOpenSslToIanaWithRegistryCsv "$opensslciphersuite" "$file"
             fi
             
             exit
