@@ -1,3 +1,10 @@
+If the installed version of the OpenSSL binary supports the 
+#     'ciphers -stdname' parameter then this is used to perform the OpenSSL
+#     to IANA cipher suite name conversion, else the 
+#     convert_ossl_cipher_suite_name_to_iana.sh script is used.
+
+--------------------------------------------------------------------------------
+
 get_cipher_suites
 =================
 
@@ -7,16 +14,19 @@ DESCRIPTION
 target (URL, hostname, IP, etc) and return a list of supported SSL/TLS cipher 
 suites.
 
-The resultant cipher suite list includes OpenSSL and IANA (Internet Assigned 
-Numbers Authority) nomenclature. In order to achieve this the script has a
-dependency on the the official TLS Cipher Suites registry which is 
-maintained by the IANA. Consequently the first time you run the script, you'll 
-be prompted to download the registry as a CSV file.
+The resultant cipher suite list includes both OpenSSL and IANA (Internet Assigned 
+Numbers Authority) nomenclature. Behind the scenes, this requires converting
+a cipher suite name from its OpenSSL nomenclature to its equivalent IANA name. 
+If the installed version of the OpenSSL binary supports the `ciphers -stdname` 
+parameter then this is used to perform the conversion, otherwise 
+`convert_ossl_cipher_suite_name_to_iana.sh` is called which has a dependency on 
+the the official TLS Cipher Suites registry which is maintained by the IANA. 
+Consequently if the latter is used then the first time you run the script, 
+you'll be prompted to download the registry as a CSV file.
 
 USAGE
 -----
 ```
-Usage:
 ./get_cipher_suites.sh -t <target> [-p <port_number>] [-n] [-v]
 
 Options:
