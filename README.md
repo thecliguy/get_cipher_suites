@@ -1,10 +1,3 @@
-If the installed version of the OpenSSL binary supports the 
-#     'ciphers -stdname' parameter then this is used to perform the OpenSSL
-#     to IANA cipher suite name conversion, else the 
-#     convert_ossl_cipher_suite_name_to_iana.sh script is used.
-
---------------------------------------------------------------------------------
-
 get_cipher_suites
 =================
 
