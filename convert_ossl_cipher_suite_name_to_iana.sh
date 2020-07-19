@@ -26,14 +26,31 @@
 #   in the official TLS Cipher Suites registry maintained by the IANA (Internet 
 #   Assigned Numbers Authority).
 #
+# USAGE
+#   For usage instructions, run: convert_ossl_cipher_suite_name_to_iana.sh -h
+#
 # HOW IT WORKS
-#   The IANA assigns each cipher suite in the registry a unique two-byte value.
-#   
-#   1. The openssl binary's 'cipher' command includes the value assigned to a 
-#      specified cipher suite in its output when the 'even more verbose' (-V) 
-#      argument is supplied. 
-#   2. The value returned by step 1 is searched for in the CSV file containing 
-#      the TLS Cipher Suites registry from the IANA.
+#   This script is essentially a wrapper around the OpenSSL binary. It provides 
+#   two techniques for converting an OpenSSL formatted cipher suite name to its 
+#   IANA (Internet Assigned Numbers Authority) description.
+#
+#   1. If the installed version of the OpenSSL binary supports the argument
+#      'ciphers -stdname' then behind the scenes the conversion is performed by 
+#      OpenSSL without any other dependencies.
+#
+#      Starting in OpenSSL 1.1.1, 'ciphers -stdname' is available in standard
+#      builds, see https://www.openssl.org/docs/man1.1.1/man1/ciphers.html
+#
+#   2. If the installed version of the OpenSSL binary doesn't support the 
+#      argument 'ciphers -stdname' then behind the scenes the conversion is 
+#      performed as follows:
+#        * The output produced by OpenSSL's 'cipher' argument includes a cipher 
+#          suite's unique two-byte value when the 'even more verbose' (-V) 
+#          argument is supplied.
+#        * The two-byte value returned is searched for against the IANA's TLS 
+#          Cipher Suites registry which is in the form of a CSV file.
+#        * If a match is found then the cipher suite's 'Description' field from
+#          the registry is returned.
 #
 # DEPENDENCIES
 #   * openssl - OpenSSL command line binary.
@@ -50,6 +67,10 @@
 ################################################################################
 # Development Log:
 #
+# 0.2.2 - 2020-07-19 - Adam Russell
+#
+#   * Various minor textual changes.
+#
 # 0.2.1 - 2020-07-05 - Adam Russell
 #
 #   * Improved the handling of multiple rows being returned in the cipher 
@@ -57,7 +78,7 @@
 #
 # 0.2.0 - 2020-07-05 - Adam Russell
 #
-#   * Removed the nonexistent parameter '-v' from the examples present in the 
+#   * Removed the non-existent parameter '-v' from the examples present in the 
 #     usage text.
 #
 #   * If the -o (openssl cipher suite name) parameter is specified without the 
@@ -232,7 +253,7 @@ usage() {
     echo "  This script has two modes of operation, each of which require a different"
     echo "  combination of options."
     echo ""
-    echo "  1. Convert a an OpenSSL formatted cipher suite name to it's IANA (Internet"
+    echo "  1. Convert an OpenSSL formatted cipher suite name to it's IANA (Internet"
     echo "     Assigned Numbers Authority) description."
     echo ""
     echo "     This can be accomplished using either OpenSSL's native ability to retrieve"
