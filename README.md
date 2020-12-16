@@ -12,8 +12,8 @@ Numbers Authority) nomenclature. Behind the scenes, this requires converting
 a cipher suite name from its OpenSSL nomenclature to its equivalent IANA name. 
 If the installed version of the OpenSSL binary supports the `ciphers -stdname` 
 parameter then this is used to perform the conversion, otherwise 
-`convert_ossl_cipher_suite_name_to_iana.sh` is called which has a dependency on 
-the the official TLS Cipher Suites registry which is maintained by the IANA. 
+`convert_ossl_cipher_suite_name_to_iana.sh` is invoked which has a dependency on 
+the the official TLS Cipher Suites registry (maintained by the IANA). 
 Consequently if the latter is used then the first time you run the script, 
 you'll be prompted to download the registry as a CSV file.
 
